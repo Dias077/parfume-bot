@@ -172,7 +172,7 @@ def get_message():
 def webhook():
     bot.remove_webhook()
     # Временно заглушка, обновим после деплоя
-    bot.set_webhook(url=f'https://YOUR_RENDER_URL.onrender.com/{TOKEN}')
+    bot.set_webhook(url=f'https://parfume-bot.onrender.com/{TOKEN}')
     return 'Webhook set', 200
 
 if __name__ == '__main__':
