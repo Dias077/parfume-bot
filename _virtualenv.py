@@ -1,8 +1,16 @@
-
+import os
 import telebot
 from telebot.types import ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
+from flask import Flask, request
+import logging
+
+# Настройка логирования
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+
+# Инициализация Flask
+server = Flask(__name__)
 
 # 🔐 Авторизация Google Sheets
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
@@ -20,7 +28,7 @@ def save_user_data(name, phone_number):
     return True
 
 # 🤖 Инициализация бота
-TOKEN = '7725277391:AAEls0OPwsexIrdjiVw_0Y2MUVsPhF0s3VQ'
+TOKEN = os.getenv("BOT_TOKEN")
 bot = telebot.TeleBot(TOKEN)
 
 # 🏁 /start
@@ -135,9 +143,9 @@ def addresses(message):
 def faqs(message):
     text = (
         '❓ Часто задаваемые вопросы:\n\n'
-        '🔹 *Как вас найти?*\nОтвет: блабла\n\n'
-        '🔹 *Что мы продаем?*\nОтвет: блаблабла\n\n'
-        '🔹 *Какой мне нужен запах?*\nОтвет: бла блаблабла'
+        '🔹 *Как вас найти?*\nОтвет: Наши магазины находятся по адресам, указанным в разделе 'Адреса'.\n\n'
+        '🔹 *Что мы продаем?*\nОтвет: Мы предлагаем мужские, женские и унисекс ароматы, подробности в каталоге.\n\n'
+        '🔹 *Какой мне нужен запах?*\nОтвет: Свяжитесь с нами через консультацию, мы поможем выбрать!'
     )
     bot.send_message(message.chat.id, text, parse_mode='Markdown')
 
@@ -151,6 +159,23 @@ def consult(message):
     )
     bot.send_message(message.chat.id, 'Свяжитесь с нами для консультации 👇', reply_markup=markup)
 
-# ▶️ Запуск бота
-print("Бот запущен...")
-bot.polling(none_stop=True)
+# Webhook-обработчик
+@server.route(f'/{TOKEN}', methods=['POST'])
+def get_message():
+    logging.debug("Received update from Telegram")
+    json_string = request.get_data().decode('utf-8')
+    update = telebot.types.Update.de_json(json_string)
+    bot.process_new_updates([update])
+    return '!', 200
+
+@server.route('/')
+def webhook():
+    bot.remove_webhook()
+    # Временно используем заглушку, обновим после деплоя
+    bot.set_webhook(url=f'https://YOUR_RENDER_URL.onrender.com/{TOKEN}')
+    return 'Webhook set', 200
+
+if __name__ == '__main__':
+    logging.info("Starting Flask server...")
+    bot.remove_webhook()
+    server.run(host='0.0.0.0', port=int(os.getenv('PORT', 5000)))
