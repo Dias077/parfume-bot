@@ -1,4 +1,3 @@
-cd C:\Users\yeshm\PycharmProjects\PythonProject15
 echo pyTelegramBotAPI==4.26.0 > requirements.txt
 echo gspread==6.2.0 >> requirements.txt
 echo oauth2client==4.1.3 >> requirements.txt
